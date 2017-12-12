@@ -1,0 +1,60 @@
+# house-shaped 2D array (test)
+
+dimension	2
+boundary	p p p
+units		real
+atom_style	full
+
+timestep 0.2
+comm_modify cutoff 150
+neighbor 100 bin
+read_data    	house.data
+
+atom_modify sort 1000 100.0
+
+# Output
+thermo          1000
+thermo_style    multi
+#dump            10 all dcd 1000 array.dcd
+dump 10  all custom 400 house.lammpstrj id type xu yu zu
+# Bonded interactions
+bond_style harmonic
+bond_coeff 1 1000 5
+bond_coeff 2 1000 3
+bond_coeff 3 1000 6
+bond_coeff 4 1000 3
+bond_coeff 5 1000 5
+bond_coeff 6 1000 6
+bond_coeff 7 1000 6.7082
+bond_coeff 8 1000 6.7082
+
+#pair_style lj/cut 2
+#pair_coeff * * 0 0
+#pair_coeff 2 3 0.7 0.5
+
+pair_style none
+
+#SMD pulling
+group base id 3 4
+group top id 2 5
+group last id 1
+fix freeze base spring/self 1000
+
+fix 31 all langevin 300 300 200 7773
+fix 32 all nve
+
+velocity all create 1.0 4928459
+
+fix 5 all enforce2d
+
+#equilibrate
+run 1000
+
+#fix 1 top viscous 2000
+
+fix af last addforce 0 10000 0
+
+#variable m equal "epair"
+#fix 10 all halt 1 v_m == 0
+
+run 5000
